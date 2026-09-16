@@ -1,0 +1,35 @@
+[project]
+name = "facebook-marketplace-scraper"
+version = "0.1.0"
+description = "Portfolio-grade marketplace scraper: MercadoLibre public API primary + optional Facebook Playwright module"
+readme = "README.md"
+requires-python = ">=3.14"
+license = { text = "MIT" }
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+facebook = [
+    "playwright>=1.40",
+]
+dev = [
+    "pytest>=8.0",
+    # Floor raised: target-version "py314" is rejected by old Ruff
+    # releases (verified clean with Ruff 0.16.7).
+    "ruff>=0.9",
+]
+
+[project.scripts]
+marketplace-scraper = "src.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py314"
