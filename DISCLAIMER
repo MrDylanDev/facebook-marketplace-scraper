@@ -1,0 +1,43 @@
+DISCLAIMER — facebook-marketplace-scraper
+============================================
+
+Educational portfolio project. This software is provided for learning and
+demonstration of web-scraping techniques only.
+
+1. Terms of Service. Facebook Marketplace and the MercadoLibre API are
+   governed by their own Terms of Service and developer terms
+   (Facebook: https://www.facebook.com/terms.php; MercadoLibre:
+   https://developers.mercadolibre.com/). Scraping may be restricted or
+   prohibited by those terms. YOU are responsible for reviewing the current
+   terms and for ensuring your use complies with them. When in doubt, use
+   the recorded fixtures and the public API — not live automation.
+
+2. What this project does to stay on the safe side. The MercadoLibre path
+   uses the public REST API with rate-limit backoff. The Facebook module is
+   opt-in, defaults to recorded fixtures in CI, clamps result counts to a
+   gentle range (N = 1-60), aborts on login walls/checkpoints, and never
+   commits credentials. None of this is legal advice and none of it
+   authorizes you to violate a site's terms.
+
+3. Accounts and access. Use only accounts you own or are authorized to use.
+   Never automate around authentication challenges, checkpoints, or
+   two-factor prompts — the tool aborts on those signals by design. Do not
+   use this software against accounts, devices, or networks you do not own.
+   Account restrictions resulting from misuse are your responsibility.
+
+4. Credentials. NEVER commit `auth_state.json`, `.env` files, cookies, or
+   tokens. They are git-ignored, rejected by CI, and flagged by the secret
+   scan. See CONTRIBUTING for the no-credentials policy.
+
+5. Rate limits and politeness. Respect HTTP 429 responses and robots
+   directives. The built-in backoff exists to be gentle, not to evade
+   limits — do not crank up concurrency, parallelism, or result counts to
+   circumvent throttling.
+
+6. No warranty. This software is provided "AS IS", without warranty of any
+   kind, express or implied, including but not limited to fitness for a
+   particular purpose (see LICENSE). The authors are not liable for
+   misuse, account action, or legal consequences arising from your use.
+
+7. No affiliation. This project is not affiliated with, sponsored, or
+   endorsed by Meta/Facebook or MercadoLibre.
