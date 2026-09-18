@@ -1,0 +1,22 @@
+.git
+.github
+.gitignore
+.venv
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+*.egg-info/
+dist/
+build/
+# Credentials and local browser state must never ship in the image.
+auth_state.json
+.env
+.env.*
+# Test sources stay out; only tests/fixtures/ is copied (see Dockerfile).
+# NOTE: `tests/*` (not `tests/`) so the `!` exception below can re-include
+# the fixtures directory — Docker cannot re-include below an excluded dir.
+tests/*
+!tests/fixtures

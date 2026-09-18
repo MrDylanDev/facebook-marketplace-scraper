@@ -1,0 +1,84 @@
+---
+name: CI
+
+"on":
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Ruff lint + format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install Ruff
+        # Floor matches pyproject.toml (target-version "py314" needs a
+        # recent Ruff); latest is installed here.
+        run: pip install "ruff>=0.9"
+      - name: Ruff check
+        run: ruff check src tests
+      - name: Ruff format check
+        run: ruff format --check src tests
+
+  test:
+    name: Pytest (fixture mode, xvfb)
+    runs-on: ubuntu-latest
+    env:
+      # CI never touches live Facebook: the Facebook adapter serves the
+      # recorded fixture whenever FB_FIXTURE=1 (or no auth_state.json).
+      FB_FIXTURE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install package with dev extras
+        # NOTE: the optional `facebook` extra (Playwright + browsers) is
+        # intentionally NOT installed here — fixture tests import lazily
+        # and prove the no-playwright path.
+        run: pip install -e ".[dev]"
+      - name: Run tests under xvfb
+        run: xvfb-run -a python -m pytest tests/ -v
+      - name: CLI smoke test (MercadoLibre help + Facebook fixture)
+        run: |
+          python -m src.cli --help
+          FB_FIXTURE=1 python -m src.cli --target facebook \
+            --query bici --limit 2
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: "8.24.0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reject tracked credential files
+        run: |
+          pattern='(^|/)auth_state\.json$|\.env(\..*)?$'
+          tracked=$(git ls-files | grep -E "$pattern" || true)
+          if [ -n "$tracked" ]; then
+            echo "Credential files must never be committed:"
+            echo "$tracked"
+            exit 1
+          fi
+          echo "No credential files tracked."
+      - name: Download gitleaks
+        run: |
+          curl -sSL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks version
+      - name: Gitleaks detect (full history)
+        run: ./gitleaks detect --source . --verbose

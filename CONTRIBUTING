@@ -1,0 +1,51 @@
+# Contributing to facebook-marketplace-scraper
+
+Thanks for stopping by. This is a small portfolio project, so the rules are
+short — but the credential rules are non-negotiable.
+
+## Setup
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"        # tests + lint
+pip install -e ".[facebook]"   # only if you need the live Facebook path
+python -m pytest tests/ -v
+ruff check src tests && ruff format --check src tests
+```
+
+## No-credentials policy (read this first)
+
+- NEVER commit `auth_state.json`, `.env` / `.env.*`, cookies, tokens, or
+  session files. They are listed in `.gitignore` AND rejected by CI (the
+  secret-scan job fails the build if they are tracked, and gitleaks scans
+  the full history).
+- The Facebook manual login (`auth_state.json`) uses a dedicated test
+  account you own, on a stable IP, and the file stays on your machine.
+- If you accidentally stage a credential file, stop and tell a maintainer
+  before pushing — history rewrites are handled case by case.
+
+## Fixture-first development
+
+- CI never touches live Facebook: `FB_FIXTURE=1` is set in the test job and
+  the Facebook adapter falls back to `tests/fixtures/fb_listings.json`
+  whenever no `auth_state.json` exists.
+- New Facebook behavior MUST ship with fixture coverage. To record a new
+  fixture case, run locally against your own session, sanitize it (no
+  personal data, no tokens), and add it under `tests/fixtures/`.
+- Any test requiring live network access to Facebook must be marked to skip
+  in CI. MercadoLibre tests use mocked HTTP (`httpx` mock transports).
+
+## Scraping etiquette for contributors
+
+- Keep result limits gentle (the `MAX_LIMIT = 60` clamp exists for a
+  reason). Do not add proxy rotation, checkpoint bypasses, 2FA automation,
+  or concurrency escalation — PRs in that direction will be closed.
+- Respect `DISCLAIMER` (educational use, ToS compliance) in every change.
+
+## PR checklist
+
+- [ ] `pytest tests/` green (or `xvfb-run -a pytest`, as CI runs it)
+- [ ] `ruff check src tests` and `ruff format --check src tests` clean
+- [ ] No credentials, state files, or personal data in the diff
+- [ ] README updated if flags, env vars, or behavior changed
+- [ ] Fixture coverage for any new adapter parsing logic
